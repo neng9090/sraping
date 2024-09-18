@@ -8,6 +8,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import io
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 def initialize_driver():
     options = Options()
@@ -17,15 +21,22 @@ def initialize_driver():
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920x1080")
     
-    # You may need to change this path if running locally
-    options.binary_location = "/usr/bin/google-chrome"  # Adjust as needed
+    # Ensure Chrome binary location is set correctly
+    options.binary_location = "/usr/bin/google-chrome"  # Adjust this path as necessary
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    return driver
+    try:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        return driver
+    except Exception as e:
+        st.error(f"Failed to initialize the Chrome driver: {e}")
+        return None
 
 def scrape_shopee(product_url):
     try:
         with initialize_driver() as driver:
+            if driver is None:
+                return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+            
             driver.get(product_url)
             WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._3e_UQe')))
             
@@ -47,6 +58,9 @@ def scrape_shopee(product_url):
 def scrape_tokopedia(product_url):
     try:
         with initialize_driver() as driver:
+            if driver is None:
+                return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+            
             driver.get(product_url)
             WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.css-1z7w6s2')))
             
@@ -68,6 +82,9 @@ def scrape_tokopedia(product_url):
 def scrape_bukalapak(product_url):
     try:
         with initialize_driver() as driver:
+            if driver is None:
+                return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+            
             driver.get(product_url)
             WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-title')))
             
