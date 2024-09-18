@@ -6,12 +6,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 import io
 import logging
-
-# Set up logging for debugging
-logging.basicConfig(level=logging.INFO)
 
 def initialize_driver():
     options = Options()
@@ -20,97 +16,97 @@ def initialize_driver():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920x1080")
-    
-    # Specify Chrome binary location if necessary
-    options.binary_location = "/usr/bin/google-chrome"  # Adjust this path as necessary
 
+    # Update the path to where ChromeDriver is located
+    chrome_driver_path = 'C:/WebDriver/chromedriver.exe'  # Adjust if necessary
     try:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        driver = webdriver.Chrome(service=Service(chrome_driver_path), options=options)
         return driver
     except Exception as e:
         logging.error(f"Failed to initialize the Chrome driver: {e}")
+        st.error(f"Failed to initialize the Chrome driver: {e}")
         return None
 
 def scrape_shopee(product_url):
     driver = initialize_driver()
     if driver is None:
-        st.error("Could not initialize the Chrome driver.")
-        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+        return pd.DataFrame()  # Return empty DataFrame if driver initialization fails
 
+    driver.get(product_url)
+    
     try:
-        driver.get(product_url)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._3e_UQe')))
-        
         product_name = driver.find_element(By.CSS_SELECTOR, 'div._3e_UQe').text
         price = driver.find_element(By.CSS_SELECTOR, 'div._3n5NQd').text
         description = driver.find_element(By.CSS_SELECTOR, 'div._1DpsGB').text
         photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')
-        
-        return pd.DataFrame({
-            'Product Name': [product_name],
-            'Price': [price],
-            'Description': [description],
-            'Photo': [photo]
-        })
     except Exception as e:
         st.error(f"Error scraping Shopee: {e}")
-        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+        product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
     finally:
         driver.quit()
+
+    data = {
+        'Product Name': [product_name],
+        'Price': [price],
+        'Description': [description],
+        'Photo': [photo]
+    }
+    return pd.DataFrame(data)
 
 def scrape_tokopedia(product_url):
     driver = initialize_driver()
     if driver is None:
-        st.error("Could not initialize the Chrome driver.")
-        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+        return pd.DataFrame()
 
+    driver.get(product_url)
+    
     try:
-        driver.get(product_url)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.css-1z7w6s2')))
-        
         product_name = driver.find_element(By.CSS_SELECTOR, 'h1.css-1z7w6s2').text
         price = driver.find_element(By.CSS_SELECTOR, 'span.css-o0fgw0').text
         description = driver.find_element(By.CSS_SELECTOR, 'div.css-1c5uq6j').text
         photo = driver.find_element(By.CSS_SELECTOR, 'img.css-1o0fl1a').get_attribute('src')
-        
-        return pd.DataFrame({
-            'Product Name': [product_name],
-            'Price': [price],
-            'Description': [description],
-            'Photo': [photo]
-        })
     except Exception as e:
         st.error(f"Error scraping Tokopedia: {e}")
-        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+        product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
     finally:
         driver.quit()
+
+    data = {
+        'Product Name': [product_name],
+        'Price': [price],
+        'Description': [description],
+        'Photo': [photo]
+    }
+    return pd.DataFrame(data)
 
 def scrape_bukalapak(product_url):
     driver = initialize_driver()
     if driver is None:
-        st.error("Could not initialize the Chrome driver.")
-        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+        return pd.DataFrame()
 
+    driver.get(product_url)
+    
     try:
-        driver.get(product_url)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-title')))
-        
         product_name = driver.find_element(By.CSS_SELECTOR, 'h1.product-title').text
         price = driver.find_element(By.CSS_SELECTOR, 'span.price').text
         description = driver.find_element(By.CSS_SELECTOR, 'div.description').text
         photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')
-        
-        return pd.DataFrame({
-            'Product Name': [product_name],
-            'Price': [price],
-            'Description': [description],
-            'Photo': [photo]
-        })
     except Exception as e:
         st.error(f"Error scraping Bukalapak: {e}")
-        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
+        product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
     finally:
         driver.quit()
+
+    data = {
+        'Product Name': [product_name],
+        'Price': [price],
+        'Description': [description],
+        'Photo': [photo]
+    }
+    return pd.DataFrame(data)
 
 def main():
     st.title("Scraping Produk Marketplace")
