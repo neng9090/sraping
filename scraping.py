@@ -9,19 +9,25 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import io
 
-def initialize_driver():
-    options = Options()
-    options.headless = True  # Run Chrome in headless mode
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    
-    # Print options for debugging
-    print("Chrome options:", options.arguments)
+def initialize_driver(retries=3):
+    for i in range(retries):
+        try:
+            options = Options()
+            options.headless = True  # Change to False if debugging
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--window-size=1920,1080")
+            options.add_argument("--enable-logging")
+            options.add_argument("--v=1")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    return driver
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            return driver
+        except Exception as e:
+            st.warning(f"Attempt {i+1} failed to initialize driver: {e}")
+            if i == retries - 1:
+                st.error("Could not initialize Chrome driver after several attempts.")
+                raise
 
 def scrape_shopee(product_url):
     driver = initialize_driver()
@@ -106,33 +112,36 @@ def main():
     
     if st.button("Scrape Data"):
         if product_url:
-            if platform == "Shopee":
-                scraped_data = scrape_shopee(product_url)
-            elif platform == "Tokopedia":
-                scraped_data = scrape_tokopedia(product_url)
-            elif platform == "Bukalapak":
-                scraped_data = scrape_bukalapak(product_url)
-            else:
-                st.error("Platform tidak dikenal")
-                return
-            
-            if not scraped_data.empty:
-                st.success("Scraping berhasil!")
-                st.write(scraped_data)
+            try:
+                if platform == "Shopee":
+                    scraped_data = scrape_shopee(product_url)
+                elif platform == "Tokopedia":
+                    scraped_data = scrape_tokopedia(product_url)
+                elif platform == "Bukalapak":
+                    scraped_data = scrape_bukalapak(product_url)
+                else:
+                    st.error("Platform tidak dikenal")
+                    return
                 
-                # Save results to CSV
-                csv_io = io.StringIO()
-                scraped_data.to_csv(csv_io, index=False)
-                csv_io.seek(0)
-                
-                st.download_button(
-                    label="Download CSV",
-                    data=csv_io.getvalue(),
-                    file_name="scraped_data.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.error("Tidak ada data yang ditemukan untuk URL yang diberikan.")
+                if not scraped_data.empty:
+                    st.success("Scraping berhasil!")
+                    st.write(scraped_data)
+                    
+                    # Save results to CSV
+                    csv_io = io.StringIO()
+                    scraped_data.to_csv(csv_io, index=False)
+                    csv_io.seek(0)
+                    
+                    st.download_button(
+                        label="Download CSV",
+                        data=csv_io.getvalue(),
+                        file_name="scraped_data.csv",
+                        mime="text/csv"
+                    )
+                else:
+                    st.error("Tidak ada data yang ditemukan untuk URL yang diberikan.")
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
         else:
             st.error("Harap masukkan URL produk")
 
