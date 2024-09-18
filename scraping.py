@@ -15,87 +15,76 @@ def initialize_driver():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.binary_location = "/usr/bin/google-chrome"  # Ensure this is the correct path
+    options.add_argument("--window-size=1920x1080")
+    
+    # You may need to change this path if running locally
+    options.binary_location = "/usr/bin/google-chrome"  # Adjust as needed
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     return driver
 
 def scrape_shopee(product_url):
-    driver = initialize_driver()
-    driver.get(product_url)
-    
     try:
-        # Wait for the product element to load
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._3e_UQe')))
-        
-        # Get product data
-        product_name = driver.find_element(By.CSS_SELECTOR, 'div._3e_UQe').text
-        price = driver.find_element(By.CSS_SELECTOR, 'div._3n5NQd').text
-        description = driver.find_element(By.CSS_SELECTOR, 'div._1DpsGB').text
-        photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')  # Add photo scraping
+        with initialize_driver() as driver:
+            driver.get(product_url)
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._3e_UQe')))
+            
+            product_name = driver.find_element(By.CSS_SELECTOR, 'div._3e_UQe').text
+            price = driver.find_element(By.CSS_SELECTOR, 'div._3n5NQd').text
+            description = driver.find_element(By.CSS_SELECTOR, 'div._1DpsGB').text
+            photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')
+            
+            return pd.DataFrame({
+                'Product Name': [product_name],
+                'Price': [price],
+                'Description': [description],
+                'Photo': [photo]
+            })
     except Exception as e:
         st.error(f"Error scraping Shopee: {e}")
-        product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
-    
-    driver.quit()
-
-    data = {
-        'Product Name': [product_name],
-        'Price': [price],
-        'Description': [description],
-        'Photo': [photo]
-    }
-    return pd.DataFrame(data)
+        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
 
 def scrape_tokopedia(product_url):
-    driver = initialize_driver()
-    driver.get(product_url)
-    
     try:
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.css-1z7w6s2')))
-        
-        product_name = driver.find_element(By.CSS_SELECTOR, 'h1.css-1z7w6s2').text
-        price = driver.find_element(By.CSS_SELECTOR, 'span.css-o0fgw0').text
-        description = driver.find_element(By.CSS_SELECTOR, 'div.css-1c5uq6j').text
-        photo = driver.find_element(By.CSS_SELECTOR, 'img.css-1o0fl1a').get_attribute('src')  # Add photo scraping
+        with initialize_driver() as driver:
+            driver.get(product_url)
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.css-1z7w6s2')))
+            
+            product_name = driver.find_element(By.CSS_SELECTOR, 'h1.css-1z7w6s2').text
+            price = driver.find_element(By.CSS_SELECTOR, 'span.css-o0fgw0').text
+            description = driver.find_element(By.CSS_SELECTOR, 'div.css-1c5uq6j').text
+            photo = driver.find_element(By.CSS_SELECTOR, 'img.css-1o0fl1a').get_attribute('src')
+            
+            return pd.DataFrame({
+                'Product Name': [product_name],
+                'Price': [price],
+                'Description': [description],
+                'Photo': [photo]
+            })
     except Exception as e:
         st.error(f"Error scraping Tokopedia: {e}")
-        product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
-    
-    driver.quit()
-
-    data = {
-        'Product Name': [product_name],
-        'Price': [price],
-        'Description': [description],
-        'Photo': [photo]
-    }
-    return pd.DataFrame(data)
+        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
 
 def scrape_bukalapak(product_url):
-    driver = initialize_driver()
-    driver.get(product_url)
-    
     try:
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-title')))
-        
-        product_name = driver.find_element(By.CSS_SELECTOR, 'h1.product-title').text
-        price = driver.find_element(By.CSS_SELECTOR, 'span.price').text
-        description = driver.find_element(By.CSS_SELECTOR, 'div.description').text
-        photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')  # Add photo scraping
+        with initialize_driver() as driver:
+            driver.get(product_url)
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-title')))
+            
+            product_name = driver.find_element(By.CSS_SELECTOR, 'h1.product-title').text
+            price = driver.find_element(By.CSS_SELECTOR, 'span.price').text
+            description = driver.find_element(By.CSS_SELECTOR, 'div.description').text
+            photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')
+            
+            return pd.DataFrame({
+                'Product Name': [product_name],
+                'Price': [price],
+                'Description': [description],
+                'Photo': [photo]
+            })
     except Exception as e:
         st.error(f"Error scraping Bukalapak: {e}")
-        product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
-    
-    driver.quit()
-
-    data = {
-        'Product Name': [product_name],
-        'Price': [price],
-        'Description': [description],
-        'Photo': [photo]
-    }
-    return pd.DataFrame(data)
+        return pd.DataFrame(columns=['Product Name', 'Price', 'Description', 'Photo'])
 
 def main():
     st.title("Scraping Produk Marketplace")
