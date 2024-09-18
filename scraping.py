@@ -16,9 +16,11 @@ logging.basicConfig(level=logging.INFO)
 def initialize_driver():
     logging.info("Initializing Chrome WebDriver...")
     options = Options()
-    options.headless = True  # Run Chrome in headless mode
+    options.headless = False  # Set to True for production, False for debugging
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument('--log-level=ALL')
+    options.add_argument('--verbose')
     
     try:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
