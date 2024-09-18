@@ -9,37 +9,30 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import io
 
-def initialize_driver(retries=3):
-    """Initialize the Chrome WebDriver with specified options."""
-    for i in range(retries):
-        try:
-            options = Options()
-            options.headless = True  # Run Chrome in headless mode
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--window-size=1920,1080")  # Set window size for rendering
+def initialize_driver():
+    options = Options()
+    options.headless = True  # Run Chrome in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.binary_location = "/usr/bin/google-chrome"  # Ensure this is the correct path
 
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-            return driver
-        except Exception as e:
-            st.warning(f"Attempt {i + 1} failed to initialize driver: {e}")
-            if i == retries - 1:
-                st.error("Could not initialize Chrome driver after several attempts.")
-                raise
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    return driver
 
 def scrape_shopee(product_url):
-    """Scrape product data from Shopee."""
     driver = initialize_driver()
     driver.get(product_url)
     
     try:
+        # Wait for the product element to load
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._3e_UQe')))
         
+        # Get product data
         product_name = driver.find_element(By.CSS_SELECTOR, 'div._3e_UQe').text
         price = driver.find_element(By.CSS_SELECTOR, 'div._3n5NQd').text
         description = driver.find_element(By.CSS_SELECTOR, 'div._1DpsGB').text
-        photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')
+        photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')  # Add photo scraping
     except Exception as e:
         st.error(f"Error scraping Shopee: {e}")
         product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
@@ -55,7 +48,6 @@ def scrape_shopee(product_url):
     return pd.DataFrame(data)
 
 def scrape_tokopedia(product_url):
-    """Scrape product data from Tokopedia."""
     driver = initialize_driver()
     driver.get(product_url)
     
@@ -65,7 +57,7 @@ def scrape_tokopedia(product_url):
         product_name = driver.find_element(By.CSS_SELECTOR, 'h1.css-1z7w6s2').text
         price = driver.find_element(By.CSS_SELECTOR, 'span.css-o0fgw0').text
         description = driver.find_element(By.CSS_SELECTOR, 'div.css-1c5uq6j').text
-        photo = driver.find_element(By.CSS_SELECTOR, 'img.css-1o0fl1a').get_attribute('src')
+        photo = driver.find_element(By.CSS_SELECTOR, 'img.css-1o0fl1a').get_attribute('src')  # Add photo scraping
     except Exception as e:
         st.error(f"Error scraping Tokopedia: {e}")
         product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
@@ -81,7 +73,6 @@ def scrape_tokopedia(product_url):
     return pd.DataFrame(data)
 
 def scrape_bukalapak(product_url):
-    """Scrape product data from Bukalapak."""
     driver = initialize_driver()
     driver.get(product_url)
     
@@ -91,7 +82,7 @@ def scrape_bukalapak(product_url):
         product_name = driver.find_element(By.CSS_SELECTOR, 'h1.product-title').text
         price = driver.find_element(By.CSS_SELECTOR, 'span.price').text
         description = driver.find_element(By.CSS_SELECTOR, 'div.description').text
-        photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')
+        photo = driver.find_element(By.CSS_SELECTOR, 'img.product-image').get_attribute('src')  # Add photo scraping
     except Exception as e:
         st.error(f"Error scraping Bukalapak: {e}")
         product_name, price, description, photo = "N/A", "N/A", "N/A", "N/A"
@@ -107,7 +98,6 @@ def scrape_bukalapak(product_url):
     return pd.DataFrame(data)
 
 def main():
-    """Main function to run the Streamlit app."""
     st.title("Scraping Produk Marketplace")
     
     platform = st.selectbox("Pilih Platform", ["Shopee", "Tokopedia", "Bukalapak"])
