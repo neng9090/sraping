@@ -8,19 +8,30 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import io
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 def initialize_driver():
+    logging.info("Initializing Chrome WebDriver...")
     options = Options()
     options.headless = True  # Run Chrome in headless mode
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    return driver
+    
+    try:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        logging.info("Chrome WebDriver initialized successfully.")
+        return driver
+    except Exception as e:
+        logging.error(f"Error initializing WebDriver: {e}")
+        raise
 
 def scrape_product_data(product_url, platform):
     driver = initialize_driver()
     driver.get(product_url)
-    
+
     try:
         if platform == "Shopee":
             WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div._3e_UQe')))
@@ -47,7 +58,7 @@ def scrape_product_data(product_url, platform):
             raise ValueError("Platform tidak dikenal")
 
     except Exception as e:
-        st.error(f"Error scraping {platform}: {e}")
+        logging.error(f"Error scraping {platform}: {e}")
         product_name, price, description, photo_url = "N/A", "N/A", "N/A", "N/A"
     
     driver.quit()
