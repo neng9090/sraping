@@ -10,26 +10,26 @@ from selenium.webdriver.support import expected_conditions as EC
 import io
 
 def initialize_driver(retries=3):
+    """Initialize the Chrome WebDriver with specified options."""
     for i in range(retries):
         try:
             options = Options()
-            options.headless = True  # Change to False if debugging
+            options.headless = True  # Run Chrome in headless mode
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--disable-gpu")
-            options.add_argument("--window-size=1920,1080")
-            options.add_argument("--enable-logging")
-            options.add_argument("--v=1")
+            options.add_argument("--window-size=1920,1080")  # Set window size for rendering
 
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
             return driver
         except Exception as e:
-            st.warning(f"Attempt {i+1} failed to initialize driver: {e}")
+            st.warning(f"Attempt {i + 1} failed to initialize driver: {e}")
             if i == retries - 1:
                 st.error("Could not initialize Chrome driver after several attempts.")
                 raise
 
 def scrape_shopee(product_url):
+    """Scrape product data from Shopee."""
     driver = initialize_driver()
     driver.get(product_url)
     
@@ -55,6 +55,7 @@ def scrape_shopee(product_url):
     return pd.DataFrame(data)
 
 def scrape_tokopedia(product_url):
+    """Scrape product data from Tokopedia."""
     driver = initialize_driver()
     driver.get(product_url)
     
@@ -80,6 +81,7 @@ def scrape_tokopedia(product_url):
     return pd.DataFrame(data)
 
 def scrape_bukalapak(product_url):
+    """Scrape product data from Bukalapak."""
     driver = initialize_driver()
     driver.get(product_url)
     
@@ -105,6 +107,7 @@ def scrape_bukalapak(product_url):
     return pd.DataFrame(data)
 
 def main():
+    """Main function to run the Streamlit app."""
     st.title("Scraping Produk Marketplace")
     
     platform = st.selectbox("Pilih Platform", ["Shopee", "Tokopedia", "Bukalapak"])
@@ -112,36 +115,33 @@ def main():
     
     if st.button("Scrape Data"):
         if product_url:
-            try:
-                if platform == "Shopee":
-                    scraped_data = scrape_shopee(product_url)
-                elif platform == "Tokopedia":
-                    scraped_data = scrape_tokopedia(product_url)
-                elif platform == "Bukalapak":
-                    scraped_data = scrape_bukalapak(product_url)
-                else:
-                    st.error("Platform tidak dikenal")
-                    return
+            if platform == "Shopee":
+                scraped_data = scrape_shopee(product_url)
+            elif platform == "Tokopedia":
+                scraped_data = scrape_tokopedia(product_url)
+            elif platform == "Bukalapak":
+                scraped_data = scrape_bukalapak(product_url)
+            else:
+                st.error("Platform tidak dikenal")
+                return
+            
+            if not scraped_data.empty:
+                st.success("Scraping berhasil!")
+                st.write(scraped_data)
                 
-                if not scraped_data.empty:
-                    st.success("Scraping berhasil!")
-                    st.write(scraped_data)
-                    
-                    # Save results to CSV
-                    csv_io = io.StringIO()
-                    scraped_data.to_csv(csv_io, index=False)
-                    csv_io.seek(0)
-                    
-                    st.download_button(
-                        label="Download CSV",
-                        data=csv_io.getvalue(),
-                        file_name="scraped_data.csv",
-                        mime="text/csv"
-                    )
-                else:
-                    st.error("Tidak ada data yang ditemukan untuk URL yang diberikan.")
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
+                # Save results to CSV
+                csv_io = io.StringIO()
+                scraped_data.to_csv(csv_io, index=False)
+                csv_io.seek(0)
+                
+                st.download_button(
+                    label="Download CSV",
+                    data=csv_io.getvalue(),
+                    file_name="scraped_data.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.error("Tidak ada data yang ditemukan untuk URL yang diberikan.")
         else:
             st.error("Harap masukkan URL produk")
 
